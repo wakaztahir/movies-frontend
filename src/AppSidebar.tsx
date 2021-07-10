@@ -16,6 +16,9 @@ const AppSidebar: FC = (props) => {
                         <Link to="/genres/">Genres</Link>
                     </li>
                     <li className="list-group-item">
+                        <Link to="/admin/movie/0">Add Movie</Link>
+                    </li>
+                    <li className="list-group-item">
                         <Link to="/admin">Manage Catalogue</Link>
                     </li>
                 </ul>

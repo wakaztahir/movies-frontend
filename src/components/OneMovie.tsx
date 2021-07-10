@@ -15,6 +15,8 @@ export interface Movie {
     year: number,
     description: string,
     mpaa_rating: string
+    rating : string,
+    release_date : string,
     genres: Map<number, string> | string[]
 }
 
