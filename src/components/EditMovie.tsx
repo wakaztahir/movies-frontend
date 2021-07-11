@@ -3,6 +3,10 @@ import {Movie} from "./OneMovie";
 import Input from "./form-components/Input";
 import TextArea from "./form-components/TextArea";
 import Select from "./form-components/Select";
+import Alert from "./ui-components/Alert.js";
+import {Link} from "react-router-dom"
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 interface EditMovieProps {
     match: {
@@ -16,7 +20,12 @@ interface EditMovieState {
     movie: Movie,
     isLoaded: boolean,
     error: Error | null,
-    mpaaOptions: { id: string, value: string }[]
+    mpaaOptions: { id: string, value: string }[],
+    errors: string[],
+    alert: {
+        type: string,
+        message: string
+    }
 }
 
 class EditMovie extends Component<EditMovieProps, EditMovieState> {
@@ -40,7 +49,12 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
             {id: "NC17", value: "NC17"},
         ],
         isLoaded: false,
-        error: null
+        error: null,
+        errors: [],
+        alert: {
+            type: "d-none",
+            message: ""
+        }
     }
 
     componentDidMount() {
@@ -78,6 +92,21 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
 
     handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
         evt.preventDefault();
+
+        let errors = [];
+        //Validating Input
+        if (this.state.movie.title === "") {
+            errors.push("title")
+        }
+
+        this.setState({
+            errors
+        })
+
+        if (errors.length > 0) {
+            return false;
+        }
+
         const data = new FormData(evt.currentTarget)
         const payload = Object.fromEntries(data.entries());
         console.log(payload)
@@ -90,8 +119,28 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
         fetch("http://localhost:4000/v1/admin/editmovie", requestOptions)
             .then(response => response.json())
             .then(data => {
-                console.log(data)
-            })
+                if (data.error) {
+                    this.setState({
+                        alert: {
+                            type: "alert-danger",
+                            message: data.error.message
+                        }
+                    })
+                } else {
+                    this.setState({
+                        alert: {
+                            type: "alert-success",
+                            message: "Changes Saved"
+                        }
+                    })
+                }
+            }).catch((error) => {
+
+        })
+    }
+
+    hasError(key: string) {
+        return this.state.errors.indexOf(key) !== -1
     }
 
     handleChange = (evt: { target: { value: any; name: any; }; }) => {
@@ -106,6 +155,42 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
         }))
     }
 
+    confirmDelete = () => {
+        confirmAlert({
+            title: 'Delete Movie',
+            message: 'Are you sure ?',
+            buttons: [
+                {
+                    label: 'Yes',
+                    onClick: () => {
+                        fetch("http://localhost:4000/v1/admin/deletemovie/"+this.state.movie.id)
+                            .then((response)=>response.json())
+                            .then(data=>{
+                                if(data.error){
+                                    this.setState({
+                                        alert:{
+                                            type:"alert-danger",
+                                            message:data.error.message
+                                        }
+                                    })
+                                }else{
+                                    this.setState({
+                                        alert:{
+                                            type:"alert-success",
+                                            message:"Movie deleted"
+                                        }
+                                    })
+                                }
+                            })
+                    }
+                },
+                {
+                    label: 'No',
+                    onClick: () => {}
+                }
+            ]
+        });
+    }
 
     render() {
         let {movie, isLoaded, error} = this.state;
@@ -118,21 +203,32 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
             return (
                 <React.Fragment>
                     <h2>Add / Edit Movie</h2>
+                    <Alert alertType={this.state.alert.type} alertMessage={this.state.alert.message}/>
                     <hr/>
                     <form method="post" onSubmit={this.handleSubmit}>
-                        <input type="hidden" id="id" value={movie.id} onChange={this.handleChange}/>
+                        <input type="hidden" name="id" value={movie.id} onChange={this.handleChange}/>
                         <Input
                             name={"title"}
                             title={"Title"}
+                            className={this.hasError("title") ? "is-invalid" : ""}
                             type={"text"}
+                            errorDiv={this.hasError("title") ? "text-danger" : "d-none"}
                             value={movie.title}
                             handleChange={this.handleChange}
+                            errorMsg={"Please enter a title"}
                         />
                         <Input
                             name={"release_date"}
                             title={"Release Date"}
                             type={"date"}
                             value={movie.release_date}
+                            handleChange={this.handleChange}
+                        />
+                        <Input
+                            name={"runtime"}
+                            title={"Runtime"}
+                            type={"text"}
+                            value={movie.runtime.toString()}
                             handleChange={this.handleChange}
                         />
                         <Select
@@ -157,12 +253,21 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
                             handleChange={this.handleChange}
                         />
                         <button className="btn btn-primary float-end">Save</button>
+                        <Link to={"/admin"} className={"btn btn-warning ms-1"}>
+                            Cancel
+                        </Link>
+                        {
+                            this.state.movie.id > 0 && (
+                                <a href="#!" onClick={() => this.confirmDelete()}
+                                   className={"btn btn-danger ms-1"}
+                                >Delete</a>
+                            )
+                        }
                     </form>
                 </React.Fragment>
             )
         }
     }
-
 }
 
 export default EditMovie
