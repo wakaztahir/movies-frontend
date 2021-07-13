@@ -8,8 +8,9 @@ import OneMovie from "./components/OneMovie";
 import Genres from "./components/Genres";
 import OneGenre from "./components/OneGenre";
 import EditMovie from "./components/EditMovie";
+import Login from "./components/Login"
 
-interface AppContentPrpos {
+interface AppContentProps {
 
 }
 
@@ -17,7 +18,7 @@ interface AppContentState {
 
 }
 
-class AppContent extends Component<AppContentPrpos, AppContentState> {
+class AppContent extends Component<AppContentProps, AppContentState> {
 
     state = {}
 
@@ -40,6 +41,7 @@ class AppContent extends Component<AppContentPrpos, AppContentState> {
                                 <Movies/>
                             </Route>
                             <Route exact path={"/genre/:id"} component={OneGenre}/>
+                            <Route exact path={"/login"} component={Login}/>
                             <Route exact path={"/genres"}>
                                 <Genres/>
                             </Route>

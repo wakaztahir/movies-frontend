@@ -1,7 +1,10 @@
-import React, {FC} from "react";
+import React, {FC, useContext} from "react";
 import {Link} from "react-router-dom"
+import {AppContext} from "./AppContext";
 
 const AppSidebar: FC = (props) => {
+    let appState = useContext(AppContext)
+
     return (
         <div className="col-md-2">
             <nav>
@@ -15,12 +18,16 @@ const AppSidebar: FC = (props) => {
                     <li className="list-group-item">
                         <Link to="/genres/">Genres</Link>
                     </li>
-                    <li className="list-group-item">
-                        <Link to="/admin/movie/0">Add Movie</Link>
-                    </li>
-                    <li className="list-group-item">
-                        <Link to="/admin">Manage Catalogue</Link>
-                    </li>
+                    {appState.jwt !== "" && (
+                        <React.Fragment>
+                            <li className="list-group-item">
+                                <Link to="/admin/movie/0">Add Movie</Link>
+                            </li>
+                            <li className="list-group-item">
+                                <Link to="/admin">Manage Catalogue</Link>
+                            </li>
+                        </React.Fragment>
+                    )}
                 </ul>
             </nav>
         </div>

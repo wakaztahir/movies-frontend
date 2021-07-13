@@ -5,8 +5,9 @@ import TextArea from "./form-components/TextArea";
 import Select from "./form-components/Select";
 import Alert from "./ui-components/Alert.js";
 import {Link} from "react-router-dom"
-import { confirmAlert } from 'react-confirm-alert';
+import {confirmAlert} from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import {AppContext} from "../AppContext";
 
 interface EditMovieProps {
     match: {
@@ -29,6 +30,9 @@ interface EditMovieState {
 }
 
 class EditMovie extends Component<EditMovieProps, EditMovieState> {
+
+    static contextType = AppContext
+
     state: EditMovieState = {
         movie: {
             id: 0,
@@ -109,11 +113,16 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
 
         const data = new FormData(evt.currentTarget)
         const payload = Object.fromEntries(data.entries());
-        console.log(payload)
+
+        const myHeaders = new Headers();
+
+        myHeaders.append("Content-Type", "application/json")
+        myHeaders.append("Authorization", "Bearer " + this.context.jwt)
 
         const requestOptions = {
             method: "POST",
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            headers: myHeaders
         }
 
         fetch("http://localhost:4000/v1/admin/editmovie", requestOptions)
@@ -163,21 +172,28 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
                 {
                     label: 'Yes',
                     onClick: () => {
-                        fetch("http://localhost:4000/v1/admin/deletemovie/"+this.state.movie.id)
-                            .then((response)=>response.json())
-                            .then(data=>{
-                                if(data.error){
+                        let myHeaders = new Headers()
+                        myHeaders.append("Content-Type", "application/json")
+                        myHeaders.append("Authorization", "Bearer "+this.context.jwt)
+                        let requestOptions = {
+                            method : "GET",
+                            headers: myHeaders
+                        }
+                        fetch("http://localhost:4000/v1/admin/deletemovie/" + this.state.movie.id, requestOptions)
+                            .then((response) => response.json())
+                            .then(data => {
+                                if (data.error) {
                                     this.setState({
-                                        alert:{
-                                            type:"alert-danger",
-                                            message:data.error.message
+                                        alert: {
+                                            type: "alert-danger",
+                                            message: data.error.message
                                         }
                                     })
-                                }else{
+                                } else {
                                     this.setState({
-                                        alert:{
-                                            type:"alert-success",
-                                            message:"Movie deleted"
+                                        alert: {
+                                            type: "alert-success",
+                                            message: "Movie deleted"
                                         }
                                     })
                                 }
@@ -186,7 +202,8 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
                 },
                 {
                     label: 'No',
-                    onClick: () => {}
+                    onClick: () => {
+                    }
                 }
             ]
         });
@@ -258,9 +275,9 @@ class EditMovie extends Component<EditMovieProps, EditMovieState> {
                         </Link>
                         {
                             this.state.movie.id > 0 && (
-                                <a href="#!" onClick={() => this.confirmDelete()}
+                                <button onClick={() => this.confirmDelete()}
                                    className={"btn btn-danger ms-1"}
-                                >Delete</a>
+                                >Delete</button>
                             )
                         }
                     </form>
